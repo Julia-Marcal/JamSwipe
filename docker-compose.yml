@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: jamswipe-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  backend:
+    build:
+      context: ./backend
+    container_name: jamswipe-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/jamswipe
+      - PORT=5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+
+  seeder:
+    build:
+      context: ./backend
+    container_name: jamswipe-seeder
+    command: ["npm", "run", "seed"]
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/jamswipe
+    depends_on:
+      - mongo
+    restart: "no"
+
+volumes:
+  mongo-data:
