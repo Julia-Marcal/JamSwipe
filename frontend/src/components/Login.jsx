@@ -1,26 +1,32 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button.jsx';
-import { Input } from '@/components/ui/input.jsx';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
-import { Label } from '@/components/ui/label.jsx';
-import { Music } from 'lucide-react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button.jsx";
+import { Input } from "@/components/ui/input.jsx";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.jsx";
+import { Label } from "@/components/ui/label.jsx";
+import { Music } from "lucide-react";
 
 function Login({ onLogin, onSwitchToRegister }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
@@ -28,13 +34,13 @@ function Login({ onLogin, onSwitchToRegister }) {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
+        localStorage.setItem("token", data.token);
         onLogin(data.token);
       } else {
-        setError(data.msg || 'Erro ao fazer login');
+        setError(data.msg || "Erro ao fazer login");
       }
     } catch (err) {
-      setError('Erro ao conectar com o servidor');
+      setError("Erro ao conectar com o servidor");
     } finally {
       setLoading(false);
     }
@@ -50,7 +56,9 @@ function Login({ onLogin, onSwitchToRegister }) {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold">JamSwipe</CardTitle>
-          <CardDescription>Descubra novas músicas de forma divertida</CardDescription>
+          <CardDescription>
+            Descubra novas músicas de forma divertida
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -77,10 +85,12 @@ function Login({ onLogin, onSwitchToRegister }) {
               />
             </div>
             {error && (
-              <div className="text-sm text-destructive text-center">{error}</div>
+              <div className="text-sm text-destructive text-center">
+                {error}
+              </div>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
@@ -99,4 +109,3 @@ function Login({ onLogin, onSwitchToRegister }) {
 }
 
 export default Login;
-
