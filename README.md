@@ -1,4 +1,3 @@
-````markdown
 # JamSwipe
 
 Aplicação interativa para descoberta, listagem e reprodução de músicas, integrando backend, banco de dados e frontend.
@@ -48,6 +47,7 @@ No diretório raiz do projeto:
 ```bash
 docker compose up --build -d
 ```
+
 ````
 
 Isso irá:
@@ -159,3 +159,4 @@ RUN_SEED_ON_START=true
 | Tag `v2` criada                    | ✅       |
 
 ---
+````
