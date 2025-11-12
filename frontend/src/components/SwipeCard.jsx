@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
-import { Heart, X, Play, Pause, History as HistoryIcon, LogOut, ArrowRight } from 'lucide-react';
+import { Heart, X, Play, Pause, History as HistoryIcon, LogOut, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import PlaylistSelector, { mockPlaylists } from './PlaylistSelector.jsx';
 
@@ -10,8 +10,11 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
   const [currentPlaylistId, setCurrentPlaylistId] = useState(defaultPlaylistId);
   const [music, setMusic] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [likedSongs, setLikedSongs] = useState([]);
+  const [likedIndex, setLikedIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
+  
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-30, 30]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
@@ -22,7 +25,6 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
 
   useEffect(() => {
     if (music && music.previewUrl && audioRef.current) {
-      // Inicia a reprodução automaticamente (TC-001)
       audioRef.current.play()
         .then(() => setIsPlaying(true))
         .catch((error) => {
@@ -62,11 +64,17 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
           const contentType = historyResponse.headers.get('content-type') || '';
           if (contentType.includes('application/json')) {
             const historyData = await historyResponse.json();
-            const likedSongs = historyData.filter(item => item.liked && item.music).map(item => item.music);
-            console.debug('SwipeCard: likedSongs count =', likedSongs.length);
-            if (likedSongs.length > 0) {
-              // Seleciona uma música aleatória das curtidas
-              data = likedSongs[Math.floor(Math.random() * likedSongs.length)];
+            const liked = historyData.filter(item => item.liked && item.music).map(item => item.music);
+            console.debug('SwipeCard: likedSongs count =', liked.length);
+            // Salva a lista de músicas curtidas para navegação
+            setLikedSongs(liked);
+            if (liked.length > 0) {
+              // Define a primeira música como atual (inicial)
+              setLikedIndex(0);
+              data = liked[0];
+            } else {
+              // vazio
+              setLikedIndex(0);
             }
           } else if (historyResponse.status === 304) {
             // Não deveria ocorrer com cache: 'no-store', mas caso ocorra, deixa data indefinido
@@ -101,6 +109,20 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
       setLoading(false);
     }
   }, [token]);
+
+  const handleNextLiked = () => {
+    if (!likedSongs || likedSongs.length === 0) return;
+    const next = (likedIndex + 1) % likedSongs.length;
+    setLikedIndex(next);
+    setMusic(likedSongs[next]);
+  };
+
+  const handlePrevLiked = () => {
+    if (!likedSongs || likedSongs.length === 0) return;
+    const prev = (likedIndex - 1 + likedSongs.length) % likedSongs.length;
+    setLikedIndex(prev);
+    setMusic(likedSongs[prev]);
+  };
 
   useEffect(() => {
     fetchRandomMusic(currentPlaylistId);
@@ -214,11 +236,13 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
         </Button>
       </div>
 
-      <div className="mb-4">
-        <PlaylistSelector
-          currentPlaylistId={currentPlaylistId}
-          onSelectPlaylist={handleSelectPlaylist}
-        />
+      <div className="mb-4 flex items-center justify-center gap-4 w-full max-w-xl mx-auto">
+        <div className="flex-1">
+          <PlaylistSelector
+            currentPlaylistId={currentPlaylistId}
+            onSelectPlaylist={handleSelectPlaylist}
+          />
+        </div>
       </div>
 
       <motion.div
@@ -228,32 +252,58 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
         onDragEnd={handleDragEnd}
         className="cursor-grab active:cursor-grabbing"
       >
-        <Card className="w-80 sm:w-96 shadow-2xl overflow-hidden">
-          <div className="relative">
-            <img
-              src={music.albumCover}
-              alt={music.title}
-              className="w-full h-80 object-cover"
-            />
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute bottom-4 right-4 rounded-full w-16 h-16 shadow-lg"
-              onClick={togglePlayPause}
-              disabled={!music || !music.previewUrl} // Desabilita se não houver preview
-            >
-              {isPlaying ? (
-                <Pause className="w-8 h-8" />
-              ) : (
-                <Play className="w-8 h-8" />
-              )}
-            </Button>
-          </div>
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-2">{music.title}</h2>
-            <p className="text-muted-foreground text-lg">{music.artist}</p>
-          </CardContent>
-        </Card>
+        <div className="relative w-80 sm:w-96 mx-auto">
+          {/* Overlay arrows positioned above the card (overlapping its top) */}
+          {currentPlaylistId === 'liked' && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrevLiked}
+                className="absolute -left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white text-gray-800 shadow z-20 hover:scale-105 transition-transform"
+                aria-label="Anterior"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNextLiked}
+                className="absolute -right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white text-gray-800 shadow z-20 hover:scale-105 transition-transform"
+                aria-label="Próxima"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </Button>
+            </>
+          )}
+
+          <Card className="w-full shadow-2xl overflow-hidden">
+            <div className="relative">
+              <img
+                src={music.albumCover}
+                alt={music.title}
+                className="w-full h-80 object-cover"
+              />
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute bottom-4 right-4 rounded-full w-16 h-16 shadow-lg"
+                onClick={togglePlayPause}
+                disabled={!music || !music.previewUrl} // Desabilita se não houver preview
+              >
+                {isPlaying ? (
+                  <Pause className="w-8 h-8" />
+                ) : (
+                  <Play className="w-8 h-8" />
+                )}
+              </Button>
+            </div>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-2">{music.title}</h2>
+              <p className="text-muted-foreground text-lg">{music.artist}</p>
+            </CardContent>
+          </Card>
+        </div>
       </motion.div>
 
       <div className="flex gap-4 mt-8">
@@ -282,16 +332,19 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
             <Heart className="w-8 h-8" />
           </Button>
         ) : (
-          <Button
-            variant="default"
-            size="icon"
-            className="w-16 h-16 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600"
-            onClick={() => fetchRandomMusic(currentPlaylistId)}
-            aria-label="Pular"
-            title="Pular"
-          >
-            <ArrowRight className="w-8 h-8" />
-          </Button>
+          // Não mostrar o botão azul quando estivermos na playlist 'liked'
+          currentPlaylistId === 'liked' ? null : (
+            <Button
+              variant="default"
+              size="icon"
+              className="w-16 h-16 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600"
+              onClick={() => fetchRandomMusic(currentPlaylistId)}
+              aria-label="Pular"
+              title="Pular"
+            >
+              <ArrowRight className="w-8 h-8" />
+            </Button>
+          )
         )}
       </div>
 
