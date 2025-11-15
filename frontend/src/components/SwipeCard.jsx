@@ -52,7 +52,7 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
       let data;
       if (playlistId === 'liked') {
         // Lógica para playlist "Curtidas"
-        const historyResponse = await fetch('http://localhost:5000/api/history', {
+        const historyResponse = await fetch('http://34.63.189.144:5000/api/history', {
           headers: {
             'x-auth-token': token,
           },
@@ -85,7 +85,7 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
         }
       } else {
         // Lógica para playlists normais (random)
-        const response = await fetch('http://localhost:5000/api/music/random', {
+        const response = await fetch('http://34.63.189.144:5000/api/music/random', {
           headers: {
             'x-auth-token': token,
           },
@@ -139,7 +139,7 @@ function SwipeCard({ token, onLogout, onViewHistory }) {
     if (!music) return;
 
     try {
-      await fetch('http://localhost:5000/api/history', {
+      await fetch('http://34.63.189.144:5000/api/history', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

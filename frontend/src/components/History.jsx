@@ -17,7 +17,7 @@ function History({ token, onBack }) {
     // Para o requisito de "músicas curtidas", vamos filtrar no frontend por enquanto.
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/history', {
+      const response = await fetch('http://34.63.189.144:5000/api/history', {
         headers: {
           'x-auth-token': token,
         },

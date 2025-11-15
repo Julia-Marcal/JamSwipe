@@ -23,7 +23,7 @@ function Login({ onLogin, onSwitchToRegister }) {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch("http://34.63.189.144:5000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
